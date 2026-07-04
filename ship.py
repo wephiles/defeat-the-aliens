@@ -58,7 +58,11 @@ class Ship:
 
         # 加载飞船图像并获取其外接矩形
         # pygame.image.load() 返回一个 surface
-        self.image = pygame.image.load('images/ship_1.bmp')
+        self.image = pygame.image.load('images/ship_2.bmp')
+        # 飞船设置
+        self.settings.ship_width = self.settings.screen_width // 15
+        self.settings.ship_height = self.settings.screen_height // 15
+        self.image = pygame.transform.scale(self.image, (self.settings.ship_width, self.settings.ship_height))
         self.rect = self.image.get_rect()
 
         # 每一艘新飞船都放在屏幕底部的中央

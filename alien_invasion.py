@@ -24,6 +24,7 @@ import pygame
 
 from settings import Settings
 from ship import Ship
+from bullet import Bullet
 
 
 class AlienInvasion:
@@ -41,8 +42,22 @@ class AlienInvasion:
         # set_mode 返回的 surface 表示整个游戏窗口
         # 激活游戏的动画循环后，每经过一次循环都将自动重绘这个 surface，
         # 将用户输入触发的所有变化都反映出来。
-        self.screen = pygame.display.set_mode((self.settings.screen_width, self.settings.screen_height))
-        # print(type(self.screen))  # <class 'pygame.surface.Surface'>
+        # self.screen = pygame.display.set_mode((self.settings.screen_width, self.settings.screen_height))
+        # # print(type(self.screen))  # <class 'pygame.surface.Surface'>
+        if self.settings.full_screen:
+            # 全屏
+            # 因为不知道用户的屏幕尺寸，如果设置全屏的话要在设置全屏之后再获取宽和高
+            # 注意: 在全屏模式下运行这款游戏前，请确认能够按 Q 键退出，
+            #   因为 Pygame 不提供在全屏模式下退出游戏的默认方式。
+            self.screen = pygame.display.set_mode(
+                (self.settings.screen_width, self.settings.screen_height),
+                pygame.FULLSCREEN
+            )
+            # 更新配置文件中的宽和高
+            self.settings.screen_width = self.screen.get_rect().width
+            self.settings.screen_height = self.screen.get_rect().height
+        else:
+            self.screen = pygame.display.set_mode((self.settings.screen_width, self.settings.screen_height))
 
         pygame.display.set_caption(self.settings.caption)
         self.bg_color = self.settings.bg_color
@@ -50,12 +65,28 @@ class AlienInvasion:
 
         self.ship = Ship(self)
 
+        # 注册子弹的编组
+        self.bullets = pygame.sprite.Group()
+
+    def _fire(self):
+        """创建一个子弹，并将子弹加入编组中。"""
+
+        # 限制子弹最多多少颗
+        if len(self.bullets) < self.settings.bullets_max_nums:
+            self.bullets.add(Bullet(self))
+
     def _check_events_key_down(self, event):
         # 按下按键
         # 如果按下的是英文状态下的 q, 直接退出.
         if event.key == pygame.K_q:
             sys.exit()
+        if event.key == pygame.K_ESCAPE:
+            # TODO: 增加连续按两次 ESC 才退出 现在是只按下ESC就退出
+            sys.exit()
 
+        # 开火！
+        if event.key == pygame.K_SPACE:
+            self._fire()
         if event.key == pygame.K_RIGHT:
             # 如果是按下的是键盘右键
             self.ship.moving_right = True
@@ -93,7 +124,12 @@ class AlienInvasion:
         # 1. 填充背景色
         self.screen.fill(self.bg_color)
 
-        # 2. 绘制飞船
+        # 2. 绘制屏幕中的元素
+        # 绘制子弹
+        for bullet in self.bullets.sprites():
+            bullet.draw_bullet()
+
+        # 绘制飞船
         self.ship.blit_me()
 
         # 3. 让最近绘制的屏幕可见
@@ -104,13 +140,29 @@ class AlienInvasion:
         # 从而营造平滑移动的效果。
         pygame.display.flip()
 
+    def _update_bullet(self):
+        """更新子弹的位置并删除已经消失的子弹"""
+        # 在对编组调用 update() 时，编组会自动对其中的每个精灵调用 update()，
+        # 因此 self.bullets.update() 将为 bullets 编组中的每颗子弹调用 bullet.update()。
+        self.bullets.update()
+
+        # 删除跑出屏幕外面的子弹
+        # 注意:
+        #  在使用 for 循环遍历列表（或 Pygame 编组）时，Python 要求该列表的长度在整个循环中保持不变。
+        #  这意味着不能从 for 循环遍历的列表或编组中删除元素，因此必须遍历编组的副本。
+        self._update_screen()
+        for bullet in self.bullets.copy():
+            if bullet.rect.bottom <= 0:
+                self.bullets.remove(bullet)
+
     def run_game(self):
         """开始游戏的主循环"""
         while True:
             # 每次循环检查事件 检查时间完毕后根据事件类型更新屏幕展示内容并刷新
             self._check_events()
             self.ship.update()
-            self._update_screen()
+
+            self._update_bullet()
 
             # tick() 方法接受一个参数：游戏的帧率。这里使用的值为 60，
             # pygame 将尽可能确保这个循环每秒恰好运行 60 次。
