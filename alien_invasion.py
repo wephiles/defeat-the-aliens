@@ -52,6 +52,10 @@ class AlienInvasion:
 
     def _check_events_key_down(self, event):
         # 按下按键
+        # 如果按下的是英文状态下的 q, 直接退出.
+        if event.key == pygame.K_q:
+            sys.exit()
+
         if event.key == pygame.K_RIGHT:
             # 如果是按下的是键盘右键
             self.ship.moving_right = True
