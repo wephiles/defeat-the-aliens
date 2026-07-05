@@ -171,6 +171,8 @@ class AlienInvasion:
         if button_clicked and not self.game_active:
             # 重置游戏的统计信息
             self.status.reset_status()
+            # 重置游戏速度
+            self.settings.initialize_dynamic_settings()
 
             self.game_active = True
 
@@ -232,6 +234,9 @@ class AlienInvasion:
             # 删除现有的子弹并创建一个新的外星舰队
             self.bullets.empty()
             self._create_fleet()
+
+            # 将所有外星人都消灭后, 加快速度
+            self.settings.increase_speed()
 
     def _update_bullet(self):
         """更新子弹的位置并删除已经消失的子弹"""
