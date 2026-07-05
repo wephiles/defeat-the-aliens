@@ -60,8 +60,8 @@ class Ship:
         # pygame.image.load() 返回一个 surface
         self.image = pygame.image.load('images/ship_2.bmp')
         # 飞船设置
-        self.settings.ship_width = self.settings.screen_width // 15
-        self.settings.ship_height = self.settings.screen_height // 15
+        self.settings.ship_width = self.settings.screen_width // 20
+        self.settings.ship_height = self.settings.screen_height // 20
         self.image = pygame.transform.scale(self.image, (self.settings.ship_width, self.settings.ship_height))
         self.rect = self.image.get_rect()
 
@@ -74,8 +74,8 @@ class Ship:
         # 飞船移动标志 -- 新创建飞船后飞船是不移动的 只有持续按住某一个键的时候才需要持续移动
         self.moving_right = False
         self.moving_left = False
-        self.moving_up = False
-        self.moving_down = False
+        # self.moving_up = False
+        # self.moving_down = False
 
     def update(self):
         """根据移动标志调整飞船位置"""
@@ -84,10 +84,10 @@ class Ship:
             self.x += speed
         if self.moving_left and self.rect.left > self.screen_rect.left:
             self.x -= speed
-        if self.moving_up:
-            self.y -= speed
-        if self.moving_down:
-            self.y += speed
+        # if self.moving_up:
+        #     self.y -= speed
+        # if self.moving_down:
+        #     self.y += speed
 
         # rect 只保留整数部分, 所以需要另设一个浮点数来让其能够表示小数
         self.rect.x = self.x
@@ -95,3 +95,8 @@ class Ship:
     def blit_me(self):
         """在指定位置绘制飞船"""
         self.screen.blit(self.image, self.rect)
+
+    def center_ship(self):
+        """在屏幕底部中央创建飞船"""
+        self.rect.midbottom = self.screen_rect.midbottom
+        self.x = float(self.rect.x)
