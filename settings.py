@@ -29,6 +29,7 @@ class Settings:
         # ================== 应用设置 ==================
         # 标题
 
+        self.alien_scores = 20
         self.caption = '打倒外星人'
         # 帧率设置
         self.frame_rate = 60
@@ -73,6 +74,8 @@ class Settings:
 
         # 以什么速度加快游戏进度
         self.speed_up_scale = 1.1
+        # 难度增高后, 以什么速率增加得分
+        self.score_up_scale = 1.5
         self.initialize_dynamic_settings()
 
     def initialize_dynamic_settings(self):
@@ -90,8 +93,11 @@ class Settings:
         # 游戏刚开始时外星舰队总是向右移动
         self.fleet_direction = 1
 
+        self.alien_scores = 20
+
     def increase_speed(self):
         """提高速度设置的值"""
         self.ship_speed *= self.speed_up_scale
         self.bullet_speed *= self.speed_up_scale
         self.alien_speed *= self.speed_up_scale
+        self.alien_scores = int(self.score_up_scale * self.alien_scores)

@@ -22,11 +22,20 @@ from ship import Ship
 
 class GameStatus:
     """跟踪游戏的统计信息"""
+
     def __init__(self, ai_game):
         """初始化统计信息"""
+        self.ships_left = 3
         self.settings = ai_game.settings
         self.reset_status()
+        self.score = 0
+        # 在任何情况下都不可以重置最高分
+        self.high_score = 0
+        self.level = 1
 
     def reset_status(self):
         """初始化可能在游戏运行期间变化的统计信息"""
         self.ships_left = self.settings.ship_limit
+        self.score = 0
+        # 显示玩家的等级
+        self.level = 1

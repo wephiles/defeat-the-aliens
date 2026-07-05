@@ -29,6 +29,7 @@ from button import Button
 from game_status import GameStatus
 from settings import Settings
 from ship import Ship
+from score_board import ScoreBoard
 
 
 class AlienInvasion:
@@ -71,6 +72,9 @@ class AlienInvasion:
 
         # 用于存储统计信息的实例对象
         self.status = GameStatus(self)
+
+        # 记分牌
+        self.score_board = ScoreBoard(self)
 
         # 我们的飞船
         self.ship = Ship(self)
@@ -171,6 +175,8 @@ class AlienInvasion:
         if button_clicked and not self.game_active:
             # 重置游戏的统计信息
             self.status.reset_status()
+            self.score_board.prep_score()
+            self.score_board.prep_ships()
             # 重置游戏速度
             self.settings.initialize_dynamic_settings()
 
@@ -204,6 +210,9 @@ class AlienInvasion:
         # 绘制外星人
         self.aliens.draw(self.screen)
 
+        # 显示记分牌
+        self.score_board.show_score()
+
         # 如果游戏没有开始, 绘制按钮
         if not self.game_active:
             self.play_button.draw_button()
@@ -228,6 +237,14 @@ class AlienInvasion:
         #   可将第一个布尔实参设置为 False，并保留第二个布尔实参为 True。
         #   这样被击中的外星人将消失，但所有的子弹始终有效，直到抵达屏幕的上边缘后消失。
         collisions = pygame.sprite.groupcollide(self.bullets, self.aliens, True, True)
+        if collisions:
+            for aliens in collisions.values():
+                # 如果在一次循环中有两颗子弹分别击中了两个外星人，或者因一颗子弹太宽而同时击中了多个外星人，
+                # 玩家将只能得到一个外星人的分数。为了修复这个问题，我们需要调整检测子弹和外星人碰撞的方式。
+                self.status.score += self.settings.alien_scores * len(aliens)
+
+            self.score_board.prep_score()
+            self.score_board.check_high_score()
 
         # 如果没有舰队了 生成新的舰队
         if not self.aliens:
@@ -237,6 +254,10 @@ class AlienInvasion:
 
             # 将所有外星人都消灭后, 加快速度
             self.settings.increase_speed()
+
+            # 提高等级
+            self.status.level += 1
+            self.score_board.prep_level()
 
     def _update_bullet(self):
         """更新子弹的位置并删除已经消失的子弹"""
@@ -259,6 +280,7 @@ class AlienInvasion:
         if self.status.ships_left > 0:
             # 将 ship_lefts - 1
             self.status.ships_left -= 1
+            self.score_board.prep_ships()
         else:
             self.game_active = False
             # 游戏结束后显示鼠标
@@ -294,6 +316,7 @@ class AlienInvasion:
             if one_alien.check_edges():
                 # 到达边缘
                 self._change_fleet_direction()
+                break
 
     def _change_fleet_direction(self):
         """将整个舰队向下移动并改变他们的位置"""

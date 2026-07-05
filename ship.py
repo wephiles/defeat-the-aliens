@@ -19,12 +19,16 @@
 """
 
 import pygame
+from pygame import sprite
 
 from settings import Settings
 
 
-class Ship:
-    """管理飞船的类"""
+class Ship(sprite.Sprite):
+    """管理飞船的类
+
+    需要让 Ship 继承 Sprite，以便能够创建飞船编组
+    """
 
     def __init__(self, ai_game):
         """初始化飞船并设置其初始位置
@@ -48,6 +52,8 @@ class Ship:
             所以将self.rect.midbottom 设置为表示屏幕的矩形的属性 midbottom。
             Pygame 将使用这些 rect 属性来放置飞船图像，使其与屏幕下边缘对齐并水平居中。
         """
+        super().__init__()
+
         # 配置
         self.settings = ai_game.settings
 
