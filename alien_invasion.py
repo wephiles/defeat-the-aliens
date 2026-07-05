@@ -25,6 +25,7 @@ import pygame
 
 from alien import Alien
 from bullet import Bullet
+from button import Button
 from game_status import GameStatus
 from settings import Settings
 from ship import Ship
@@ -80,7 +81,11 @@ class AlienInvasion:
 
         # 外星人舰队
         self._create_fleet()
-        self.game_active = True
+
+        # 让游戏在一开始处于非活动状态
+        self.game_active = False
+
+        self.play_button = Button(self, "Play")
 
     def _create_alien(self, x_position, y_position):
         """创建一个外星人并将其放在当前行中"""
@@ -98,7 +103,7 @@ class AlienInvasion:
         alien_width, alien_height = alien_.rect.width, alien_.rect.height
 
         current_x, current_y = alien_width, alien_height
-        while current_y < (self.settings.screen_height - 4 * alien_height):
+        while current_y < (self.settings.screen_height - 5 * alien_height):
             while current_x < (self.settings.screen_width - 2 * alien_width):
                 self._create_alien(current_x, current_y)
                 current_x += 2 * alien_width
@@ -154,6 +159,31 @@ class AlienInvasion:
             elif event.type == pygame.KEYUP:
                 # 松开按键
                 self._check_events_key_up(event)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                self._check_play_button(mouse_pos)
+
+    def _check_play_button(self, mouse_pos):
+        """单机 Play 按钮就开始游戏"""
+        # 使用 rect 的 collidepoint() 方法检查鼠标的单击位置是否在 Play 按钮的 rect 内
+        button_clicked = self.play_button.rect.collidepoint(mouse_pos)
+        # not self.game_active 是为了解决当点击 Play 按钮后这个按钮消失但是如果点击按钮的位置还是会重启游戏
+        if button_clicked and not self.game_active:
+            # 重置游戏的统计信息
+            self.status.reset_status()
+
+            self.game_active = True
+
+            # 清空外星人列表和子弹列表
+            self.bullets.empty()
+            self.aliens.empty()
+
+            # 创建一个新的外星舰队，并将飞船放在屏幕底部中央
+            self._create_fleet()
+            self.ship.center_ship()
+
+            # 隐藏鼠标
+            pygame.mouse.set_visible(False)
 
     def _update_screen(self):
         # 每次循环时都重绘屏幕
@@ -171,6 +201,10 @@ class AlienInvasion:
 
         # 绘制外星人
         self.aliens.draw(self.screen)
+
+        # 如果游戏没有开始, 绘制按钮
+        if not self.game_active:
+            self.play_button.draw_button()
 
         # 3. 让最近绘制的屏幕可见
         # pygame.display.flip()，命令 pygame 让最近绘制的屏幕可见。
@@ -222,6 +256,8 @@ class AlienInvasion:
             self.status.ships_left -= 1
         else:
             self.game_active = False
+            # 游戏结束后显示鼠标
+            pygame.mouse.set_visible(True)
 
         # 清空外星人列表和子弹列表
         self.bullets.empty()
@@ -277,6 +313,7 @@ class AlienInvasion:
                 self._update_bullet()
                 self._update_aliens()
 
+            self._update_screen()
             # tick() 方法接受一个参数：游戏的帧率。这里使用的值为 60，
             # pygame 将尽可能确保这个循环每秒恰好运行 60 次。
             self.clock.tick(self.settings.frame_rate)
